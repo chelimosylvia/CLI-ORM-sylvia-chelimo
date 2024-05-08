@@ -1,5 +1,6 @@
+# /task_manager_cli.py
 import sys
-from models import Task, Category, Session
+from task_manager_models import Task, Category, Session
 from datetime import datetime
 from sqlalchemy.orm import joinedload
 
