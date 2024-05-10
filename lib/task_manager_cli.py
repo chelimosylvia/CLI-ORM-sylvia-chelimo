@@ -92,10 +92,16 @@ class TaskManagerCLI:
         print("Task created successfully.")
 
     def delete_task(self):
-        task_id = input("Enter task ID to delete: ")
+     task_id = input("Enter task ID to delete: ")
+     session = Session()
+     task = session.query(Task).filter_by(id=task_id).first()
+     session.close()
+    
+     if task:
         Task.delete_task(task_id)
         print("Task deleted successfully.")
-
+     else:
+        print("Task with the given ID does not exist.")
     def view_all_tasks(self):
      session = Session()
      tasks = session.query(Task).all()
@@ -107,6 +113,8 @@ class TaskManagerCLI:
             print(f"Description: {task.description}")
             print(f"Due Date: {task.due_date}")
             print(f"Category ID: {task.category_id}")
+            print ()
+            print ()
      else:
         print("No tasks found.")
 
@@ -144,7 +152,7 @@ class TaskManagerCLI:
             for category in categories:
                 print(f"Category ID: {category.id}")
                 print(f"Name: {category.name}")
-                print("-----------------------------------")
+                print()
         else:
             print("No categories found.")
     def view_tasks_of_category(self):
@@ -161,7 +169,7 @@ class TaskManagerCLI:
                 print(f"Description: {task.description}")
                 print(f"Due Date: {task.due_date}")
                 print(f"Category ID: {task.category_id}")
-                print("-----------------------------------")
+                print()
         else:
             print("No tasks found for the specified category.")
      else:
@@ -177,7 +185,7 @@ class TaskManagerCLI:
         print("Category not found.")
 
     def exit(self):
-        print("Exiting Task Manager CLI!")
+        print("Exiting Task Manager!")
         self.running = False
         sys.exit()
 

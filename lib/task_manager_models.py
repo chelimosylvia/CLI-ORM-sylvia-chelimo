@@ -60,6 +60,9 @@ class Task(Base):
 
     category = relationship('Category', back_populates='tasks')
 
+    def __str__(self):
+        return f"Task ID: {self.id}, Title: {self.title}, Description: {self.description}, Due Date: {self.due_date}, Category ID: {self.category_id}"
+
     @classmethod
     def create_task(cls, title, description, due_date, category_id):
         session = Session()
@@ -81,6 +84,12 @@ class Task(Base):
     def get_all_tasks(cls):
         session = Session()
         tasks = session.query(Task).all()
+        session.close()
+        return tasks
+    @classmethod
+    def get_tasks_by_category(cls, category_id):
+        session = Session()
+        tasks = session.query(Task).filter_by(category_id=category_id).all()
         session.close()
         return tasks
 
