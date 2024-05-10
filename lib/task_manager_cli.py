@@ -1,4 +1,4 @@
-# /task_manager_cli.py
+# lib/task_manager_cli.py
 import sys
 from task_manager_models import Task, Category, Session
 from datetime import datetime
@@ -177,7 +177,7 @@ class TaskManagerCLI:
         print("Category not found.")
 
     def exit(self):
-        print("Exiting Task Manager CLI. Goodbye!")
+        print("Exiting Task Manager CLI!")
         self.running = False
         sys.exit()
 
