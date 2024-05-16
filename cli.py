@@ -1,16 +1,13 @@
-# lib/task_manager_cli.py
-import sys
-from task_manager_models import Task, Category, Session
+from models import Task, Category, Session
 from datetime import datetime
-from sqlalchemy.orm import joinedload
 
 class TaskManagerCLI:
     def __init__(self):
         self.running = True
-        self.initialize()
+        self.session = Session()
 
     def initialize(self):
-        print("Welcome to Task Manager CLI!")
+        print("Welcome to Task Manager!")
 
     def display_menu(self):
         print("\nMenu:")
@@ -81,119 +78,96 @@ class TaskManagerCLI:
         due_date_str = input("Enter due date (YYYY-MM-DD): ")
         try:
             due_date = datetime.strptime(due_date_str, '%Y-%m-%d').date()
-            print("Parsed due date:", due_date)  
         except ValueError:
             print("Invalid date format. Please use YYYY-MM-DD format.")
             return
 
         category_id = input("Enter category ID: ")
 
-        task = Task.create_task(title=title, description=description, due_date=due_date, category_id=category_id)
+        task = Task(title, 
+                    description, 
+                    due_date, 
+                    category_id)
+        self.session.add_task(task)
         print("Task created successfully.")
 
     def delete_task(self):
-     task_id = input("Enter task ID to delete: ")
-     session = Session()
-     task = session.query(Task).filter_by(id=task_id).first()
-     session.close()
-    
-     if task:
-        Task.delete_task(task_id)
+        task_id = input("Enter task ID to delete: ")
+        self.session.delete_task(task_id)
         print("Task deleted successfully.")
-     else:
-        print("Task with the given ID does not exist.")
+
     def view_all_tasks(self):
-     session = Session()
-     tasks = session.query(Task).all()
-     session.close()
-     if tasks:
-        for task in tasks:
-            print(f"Task ID: {task.id}")
-            print(f"Title: {task.title}")
-            print(f"Description: {task.description}")
-            print(f"Due Date: {task.due_date}")
-            print(f"Category ID: {task.category_id}")
-            print ()
-            print ()
-     else:
-        print("No tasks found.")
+        tasks = self.session.get_all_tasks()
+        if not tasks:
+            print("No tasks found.")
+        else:
+            for task in tasks:
+                print(task)
 
     def view_tasks_by_category(self):
         category_id = input("Enter category ID: ")
-        tasks = Task.get_tasks_by_category(category_id)
-        if tasks:
-            for task in tasks:
-                print(task)
-        else:
+        tasks = self.session.get_all_tasks()
+        filtered_tasks = [task for task in tasks if task[4] == int(category_id)]
+        if not filtered_tasks:
             print("No tasks found for the specified category.")
+        else:
+            for task in filtered_tasks:
+                print(task)
 
     def find_task_by_id(self):
         task_id = input("Enter task ID: ")
-        task = Task.find_task_by_id(task_id)
-        if task:
-            print(task)
-        else:
-            print("Task not found.")
+        tasks = self.session.get_all_tasks()
+        for task in tasks:
+            if task[0] == int(task_id):
+                print(task)
+                return
+        print("Task not found.")
 
     def create_category(self):
         name = input("Enter category name: ")
-        Category.create_category(name=name)
+        category = Category(name)
+        self.session.add_category(category)
         print("Category created successfully.")
 
     def delete_category(self):
         category_id = input("Enter category ID to delete: ")
-        Category.delete_category(category_id)
+        self.session.delete_category(category_id)
         print("Category deleted successfully.")
 
     def view_all_categories(self):
-     with Session() as session:
-        categories = session.query(Category).all()
-        if categories:
-            for category in categories:
-                print(f"Category ID: {category.id}")
-                print(f"Name: {category.name}")
-                print()
-        else:
+        categories = self.session.get_all_categories()
+        if not categories:
             print("No categories found.")
-    def view_tasks_of_category(self):
-     category_id = input("Enter category ID: ")
-     category = Category.find_category_by_id(category_id)
-     if category:
-        session = Session()
-        category_with_tasks = session.query(Category).options(joinedload(Category.tasks)).filter_by(id=category_id).first()
-        session.close()
-        if category_with_tasks:
-            for task in category_with_tasks.tasks:
-                print(f"Task ID: {task.id}")
-                print(f"Title: {task.title}")
-                print(f"Description: {task.description}")
-                print(f"Due Date: {task.due_date}")
-                print(f"Category ID: {task.category_id}")
-                print()
         else:
+            for category in categories:
+                print(category)
+
+    def view_tasks_of_category(self):
+        category_id = input("Enter category ID: ")
+        tasks = self.session.get_all_tasks()
+        filtered_tasks = [task for task in tasks if task[4] == int(category_id)]
+        if not filtered_tasks:
             print("No tasks found for the specified category.")
-     else:
-        print("Category not found.")
+        else:
+            for task in filtered_tasks:
+                print(task)
 
     def find_category_by_id(self):
-     category_id = input("Enter category ID: ")
-     category = Category.find_category_by_id(category_id)
-     if category:
-        print(f"Category ID: {category.id}")
-        print(f"Category Name: {category.name}")
-     else:
+        category_id = input("Enter category ID: ")
+        categories = self.session.get_all_categories()
+        for category in categories:
+            if category[0] == int(category_id):
+                print(category)
+                return
         print("Category not found.")
 
     def exit(self):
-        print("Exiting Task Manager!")
+        print("Exiting Task Manager. Goodbye!")
         self.running = False
-        sys.exit()
+        self.session.db.close()
 
     def run(self):
+        self.initialize()
         while self.running:
             self.display_menu()
             self.handle_input()
-
-if __name__ == "__main__":
-    cli = TaskManagerCLI()
-    cli.run()
